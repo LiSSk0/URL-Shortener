@@ -7,6 +7,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from datetime import date
 
+DB_NAME = "db_url"
 POSTGRE_USERNAME = "postgres"
 POSTGRE_PASS = "2409"
 
@@ -14,7 +15,7 @@ SqlAlchemyBase = sqlalchemy.orm.declarative_base()  # ??
 
 
 class Url(SqlAlchemyBase):
-    def __init__(self, token, long_url, creation_date):
+    def __init__(self, long_url, token, creation_date):
         self.token = token
         self.long_url = long_url
         self.creation_date = creation_date
@@ -25,7 +26,7 @@ class Url(SqlAlchemyBase):
     creation_date = Column(String)
 
 
-def create_db():
+def create_db(db_name):
     # creating connection to postgres
     connection = psycopg2.connect(user=POSTGRE_USERNAME, password=POSTGRE_PASS)
     connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # при использовании уровня изоляции транзакции
@@ -37,15 +38,17 @@ def create_db():
     # creating db
     cursor = connection.cursor()
     try:
-        cursor.execute('create database db_url')
+        cursor.execute('create database ' + db_name)
     except psycopg2.errors.DuplicateDatabase:  # db has been already created
         pass
     cursor.close()
     connection.close()
 
+
+def connect_to_db(db_name):
     # dialect+driver://username:password@host:port/db_name
     # default parameters: echo=False, pool_size=5, max_overflow=10, encoding='UTF-8'
-    connection_link = "postgresql+psycopg2://" + POSTGRE_USERNAME + ":" + POSTGRE_PASS + "@localhost/db_url"
+    connection_link = "postgresql+psycopg2://" + POSTGRE_USERNAME + ":" + POSTGRE_PASS + "@localhost/" + db_name
 
     # engine creating and connecting
     engine = create_engine(connection_link)
@@ -69,7 +72,7 @@ def create_db():
     return engine, table
 
 
-def insert_to_db(engine, table, long_url, token):
+def insert_to_db(engine, long_url, token):
     current_date = date.today().strftime("%d.%m.%Y")
 
     # можно глобально прописать
@@ -84,12 +87,11 @@ def insert_to_db(engine, table, long_url, token):
         # url.current_date = current_date
         try:
             session.add(Url(long_url, token, current_date))
+            session.commit()  # print(session.new)
         except sqlalchemy.exc.IntegrityError:  # long_url is already in table
             pass
         except psycopg2.errors.UniqueViolation:  # long_url is already in table
             pass
-
-        session.commit()  # print(session.new)
 
 
 def print_db(engine, table):
@@ -113,7 +115,8 @@ def get_short_url_from_db(url_long):
     return "https://short.url"
 
 
-engine, table = create_db()
+# create_db(DB_NAME)  # only when init, once
+engine, table = connect_to_db(DB_NAME)
 print_db(engine, table)
-insert_to_db(engine, table, "https://test.url/", "TEST1")
+insert_to_db(engine, "https://test2.url/", "TEST2")
 print_db(engine, table)
