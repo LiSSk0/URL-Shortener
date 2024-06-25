@@ -69,7 +69,7 @@ def connect_to_db(db_name):
     # cursor.close()
     # connection.close()
 
-    return engine, table
+    return engine
 
 
 def insert_to_db(engine, long_url, token):
@@ -78,28 +78,26 @@ def insert_to_db(engine, long_url, token):
     # можно глобально прописать
     # session = sessionmaker(bind=engine)
     # и потом просто юзать session = Session()
-    # но мне понятнее каждый раз прописывать engine
+    # но мне понятнее каждый раз прописывать, чтобы жестко чувствовать
     with Session(engine) as session:
-
-        # url = Url()
-        # url.token = token
-        # url.long_url = long_url
-        # url.current_date = current_date
-        try:
+        if not session.query(Url).filter(Url.long_url == long_url).first():
             session.add(Url(long_url, token, current_date))
-            session.commit()  # print(session.new)
-        except sqlalchemy.exc.IntegrityError:  # long_url is already in table
-            pass
-        except psycopg2.errors.UniqueViolation:  # long_url is already in table
-            pass
+            session.commit()
 
 
-def print_db(engine, table):
-    select_query = table.select()
-    with engine.connect() as connection:
-        result = connection.execute(select_query)
-        for row in result:
-            print(row)
+def get_table(engine):
+    table = []
+    with Session(engine) as session:
+        all_urls = session.query(Url).all()
+        for url in all_urls:
+            table.append((url.long_url, url.token, url.creation_date))
+    return table
+
+
+def print_db(engine):
+    table = get_table(engine)
+    for url in table:
+        print(*url)
 
 
 def is_in_db(engine, table, long_url):
@@ -116,7 +114,7 @@ def get_short_url_from_db(url_long):
 
 
 # create_db(DB_NAME)  # only when init, once
-engine, table = connect_to_db(DB_NAME)
-print_db(engine, table)
-insert_to_db(engine, "https://test2.url/", "TEST2")
-print_db(engine, table)
+engine = connect_to_db(DB_NAME)
+print_db(engine)
+# insert_to_db(engine, "https://test2.url/", "TEST2")
+# print_db(engine)
