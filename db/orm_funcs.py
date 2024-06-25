@@ -35,7 +35,7 @@ def create_db(db_name):
                                                                 # фиксирована в базе данных без необходимости явного
                                                                 # вызова команды COMMIT.
 
-    # creating db
+    # creating db if not
     cursor = connection.cursor()
     try:
         cursor.execute('create database ' + db_name)
@@ -43,6 +43,16 @@ def create_db(db_name):
         pass
     cursor.close()
     connection.close()
+
+    # cursor = connection.cursor()
+    # is_created = cursor.execute(f"SELECT 1 FROM pg_database WHERE datname = '{DB_NAME}'")
+    # print("val = ", is_created)
+    # if not is_created:
+    #     cursor.execute('create database ' + db_name)
+    # else:
+    #     print("already created")
+    # cursor.close()
+    # connection.close()
 
 
 def connect_to_db(db_name):
@@ -63,13 +73,16 @@ def connect_to_db(db_name):
 
     # init the table (if it doesn't exist)
     metadata.create_all(bind=engine)
-    # SqlAlchemyBase.metadata.create_all(engine)  # хз в чем отличие, но это не работает
-
-    # cursor.execute("insert into db_url (token, long_url, creating_date) values ('TEST2', 'https', '24.02')")
-    # cursor.close()
-    # connection.close()
+    # SqlAlchemyBase.metadata.create_all(engine)  # хз в чем отличие, но не работает
 
     return engine
+
+
+def is_in_db(engine, long_url):
+    with Session(engine) as session:
+        if session.query(Url).filter(Url.long_url == long_url).first():
+            return True
+        return False
 
 
 def insert_to_db(engine, long_url, token):
@@ -78,11 +91,14 @@ def insert_to_db(engine, long_url, token):
     # можно глобально прописать
     # session = sessionmaker(bind=engine)
     # и потом просто юзать session = Session()
-    # но мне понятнее каждый раз прописывать, чтобы жестко чувствовать
+    # но мне не хочется глобальные делать
+    result = is_in_db(engine, long_url)  # объявление тут, чтобы не было двойного открытия сессии ниже
     with Session(engine) as session:
-        if not session.query(Url).filter(Url.long_url == long_url).first():
+        if not result:
             session.add(Url(long_url, token, current_date))
             session.commit()
+        else:
+            print("!ERROR inserting: db/orm_funcs.py - insert_to_db: url '" + long_url + "' is already in db.")
 
 
 def get_table(engine):
@@ -100,21 +116,17 @@ def print_db(engine):
         print(*url)
 
 
-def is_in_db(engine, table, long_url):
-    select_query = table.select(where=long_url)
-    with engine.connect() as connection:
-        result = connection.execute(select_query)
-    if result:
-        return True
-    return False
+def get_token_from_db(engine, long_url):
+    if not is_in_db(engine, long_url):
+        return None
+    with Session(engine) as session:
+        return session.query(Url.token).filter(Url.long_url == long_url).first()[0]
 
 
-def get_short_url_from_db(url_long):
-    return "https://short.url"
-
-
-# create_db(DB_NAME)  # only when init, once
+create_db(DB_NAME)  # only when init, once
 engine = connect_to_db(DB_NAME)
 print_db(engine)
-# insert_to_db(engine, "https://test2.url/", "TEST2")
+insert_to_db(engine, "https://test2.url/", "TEST2")
+print(get_token_from_db(engine, "https://test.url/"))
+print(get_token_from_db(engine, "https://test.url1/"))
 # print_db(engine)
