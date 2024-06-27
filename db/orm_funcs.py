@@ -7,9 +7,11 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from datetime import date
 
+from get_data import get_credentials
+
 DB_NAME = "db_url"
-POSTGRE_USERNAME = "postgres"
-POSTGRE_PASS = "2409"
+POSTGRE_USERNAME, POSTGRE_PASS = get_credentials("credentials.txt")
+# print(POSTGRE_PASS, POSTGRE_USERNAME)
 
 SqlAlchemyBase = sqlalchemy.orm.declarative_base()  # ??
 
@@ -28,7 +30,13 @@ class Url(SqlAlchemyBase):
 
 def create_db(db_name):
     # creating connection to postgres
-    connection = psycopg2.connect(user=POSTGRE_USERNAME, password=POSTGRE_PASS)
+    try:
+        connection = psycopg2.connect(user=POSTGRE_USERNAME, password=POSTGRE_PASS)
+    except psycopg2.OperationalError:
+        print("!ERROR bad credentials: db/orm_funcs.py - create_db.")
+        print("Database has not been created.")  # but maybe it already exists
+        return None
+
     connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # при использовании уровня изоляции транзакции
                                                                 # ISOLATION_LEVEL_AUTOCOMMIT каждая операция INSERT,
                                                                 # UPDATE, DELETE и т.д. будет автоматически
@@ -123,7 +131,9 @@ def get_token_from_db(engine, long_url):
         return session.query(Url.token).filter(Url.long_url == long_url).first()[0]
 
 
-create_db(DB_NAME)  # only when init, once
+if create_db(DB_NAME) is None:  # only when init, once
+    print("Какой-то стоп должен быть тк бд не создана (важно) из-за плохих credentials")
+    # бд может уже существовать на пк, тогда программа сможет работать. надо продумать
 engine = connect_to_db(DB_NAME)
 print_db(engine)
 insert_to_db(engine, "https://test2.url/", "TEST2")
