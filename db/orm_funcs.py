@@ -1,38 +1,39 @@
 import sqlalchemy
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, MetaData, Table, Column, String
+from sqlalchemy import create_engine, MetaData, Table, Column, String, Date
 
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-from datetime import date
+from datetime import date, timedelta
 
 from get_data import get_credentials
 
 DB_NAME = "db_url"
 POSTGRE_USERNAME, POSTGRE_PASS = get_credentials("credentials.txt")
 # print(POSTGRE_PASS, POSTGRE_USERNAME)
+EXPIRATION_TIME = 30  # url retention time (days), then it will be deleted
 
 SqlAlchemyBase = sqlalchemy.orm.declarative_base()  # ??
 
 
 class Url(SqlAlchemyBase):
-    def __init__(self, long_url, token, creation_date):
+    def __init__(self, long_url, token, expiration_date):
         self.token = token
         self.long_url = long_url
-        self.creation_date = creation_date
+        self.expiration_date = expiration_date
 
     __tablename__ = 'urls'
     long_url = Column(String, primary_key=True)
     token = Column(String)
-    creation_date = Column(String)
+    expiration_date = Column(Date)
 
 
 def create_db(db_name):
     # creating connection to postgres
     try:
         connection = psycopg2.connect(user=POSTGRE_USERNAME, password=POSTGRE_PASS)
-    except psycopg2.OperationalError:
+    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError):
         print("!ERROR bad credentials: db/orm_funcs.py - create_db.")
         print("Database has not been created.")  # but maybe it already exists
         return None
@@ -51,6 +52,7 @@ def create_db(db_name):
         pass
     cursor.close()
     connection.close()
+    return True
 
     # cursor = connection.cursor()
     # is_created = cursor.execute(f"SELECT 1 FROM pg_database WHERE datname = '{DB_NAME}'")
@@ -77,7 +79,7 @@ def connect_to_db(db_name):
     table = Table('urls', metadata,
                   Column('long_url', String, primary_key=True),
                   Column('token', String),
-                  Column('creation_date', String))
+                  Column('expiration_date', Date))
 
     # init the table (if it doesn't exist)
     metadata.create_all(bind=engine)
@@ -94,7 +96,8 @@ def is_in_db(engine, long_url):
 
 
 def insert_to_db(engine, long_url, token):
-    current_date = date.today().strftime("%d.%m.%Y")
+    current_date = date.today()  # .strftime("%d.%m.%Y")
+    expiration_date = current_date + timedelta(days=EXPIRATION_TIME)  # "yyyy-mm-dd"
 
     # можно глобально прописать
     # session = sessionmaker(bind=engine)
@@ -103,7 +106,7 @@ def insert_to_db(engine, long_url, token):
     result = is_in_db(engine, long_url)  # объявление тут, чтобы не было двойного открытия сессии ниже
     with Session(engine) as session:
         if not result:
-            session.add(Url(long_url, token, current_date))
+            session.add(Url(long_url, token, expiration_date))
             session.commit()
         else:
             print("!ERROR inserting: db/orm_funcs.py - insert_to_db: url '" + long_url + "' is already in db.")
@@ -114,7 +117,7 @@ def get_table(engine):
     with Session(engine) as session:
         all_urls = session.query(Url).all()
         for url in all_urls:
-            table.append((url.long_url, url.token, url.creation_date))
+            table.append((url.long_url, url.token, url.expiration_date))
     return table
 
 
@@ -138,5 +141,5 @@ engine = connect_to_db(DB_NAME)
 print_db(engine)
 insert_to_db(engine, "https://test2.url/", "TEST2")
 print(get_token_from_db(engine, "https://test.url/"))
-print(get_token_from_db(engine, "https://test.url1/"))
+# print(get_token_from_db(engine, "https://test.url1/"))
 # print_db(engine)
