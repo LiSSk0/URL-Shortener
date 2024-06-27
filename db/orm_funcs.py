@@ -7,12 +7,11 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from datetime import date, timedelta
 
-from get_data import get_credentials
+from credentials_funcs import get_credentials, check_credentials
 
 DB_NAME = "db_url"
 POSTGRE_USERNAME, POSTGRE_PASS = get_credentials("credentials.txt")
-# print(POSTGRE_PASS, POSTGRE_USERNAME)
-EXPIRATION_TIME = 30  # url retention time (days), then it will be deleted
+EXPIRATION_TIME = 30  # url retention time (days), after which it will be deleted
 
 SqlAlchemyBase = sqlalchemy.orm.declarative_base()  # ??
 
@@ -31,12 +30,10 @@ class Url(SqlAlchemyBase):
 
 def create_db(db_name):
     # creating connection to postgres
-    try:
-        connection = psycopg2.connect(user=POSTGRE_USERNAME, password=POSTGRE_PASS)
-    except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError):
-        print("!ERROR bad credentials: db/orm_funcs.py - create_db.")
-        print("Database has not been created.")  # but maybe it already exists
-        return None
+    connection = psycopg2.connect(user=POSTGRE_USERNAME, password=POSTGRE_PASS)
+    # except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError):
+    #    print("!ERROR bad credentials: db/orm_funcs.py - create_db.")
+    #    return False
 
     connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)  # при использовании уровня изоляции транзакции
                                                                 # ISOLATION_LEVEL_AUTOCOMMIT каждая операция INSERT,
@@ -52,17 +49,6 @@ def create_db(db_name):
         pass
     cursor.close()
     connection.close()
-    return True
-
-    # cursor = connection.cursor()
-    # is_created = cursor.execute(f"SELECT 1 FROM pg_database WHERE datname = '{DB_NAME}'")
-    # print("val = ", is_created)
-    # if not is_created:
-    #     cursor.execute('create database ' + db_name)
-    # else:
-    #     print("already created")
-    # cursor.close()
-    # connection.close()
 
 
 def connect_to_db(db_name):
@@ -121,7 +107,7 @@ def get_table(engine):
     return table
 
 
-def print_db(engine):
+def print_table(engine):
     table = get_table(engine)
     for url in table:
         print(*url)
@@ -134,12 +120,14 @@ def get_token_from_db(engine, long_url):
         return session.query(Url.token).filter(Url.long_url == long_url).first()[0]
 
 
-if create_db(DB_NAME) is None:  # only when init, once
-    print("Какой-то стоп должен быть тк бд не создана (важно) из-за плохих credentials")
-    # бд может уже существовать на пк, тогда программа сможет работать. надо продумать
+if not check_credentials(POSTGRE_USERNAME, POSTGRE_PASS):
+    print("!ERROR bad credentials")
+    # sys.exit()
+
+create_db(DB_NAME)
 engine = connect_to_db(DB_NAME)
-print_db(engine)
+print_table(engine)
 insert_to_db(engine, "https://test2.url/", "TEST2")
 print(get_token_from_db(engine, "https://test.url/"))
 # print(get_token_from_db(engine, "https://test.url1/"))
-# print_db(engine)
+# print_table(engine)
