@@ -10,7 +10,6 @@ import sys
 
 from credentials_funcs import get_credentials, check_credentials
 
-DB_NAME = "db_url"
 POSTGRE_USERNAME, POSTGRE_PASS = get_credentials("credentials.txt")
 EXPIRATION_TIME = 30  # url retention time (days), after which it will be deleted
 
