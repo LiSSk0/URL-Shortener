@@ -6,6 +6,7 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from datetime import date, timedelta
+import sys
 
 from credentials_funcs import get_credentials, check_credentials
 
@@ -120,14 +121,11 @@ def get_token_from_db(engine, long_url):
         return session.query(Url.token).filter(Url.long_url == long_url).first()[0]
 
 
+def get_tokens(engine):
+    with Session(engine) as session:
+        return session.query(Url.token).all()
+
+
 if not check_credentials(POSTGRE_USERNAME, POSTGRE_PASS):
     print("!ERROR bad credentials")
     # sys.exit()
-
-create_db(DB_NAME)
-engine = connect_to_db(DB_NAME)
-print_table(engine)
-insert_to_db(engine, "https://test2.url/", "TEST2")
-print(get_token_from_db(engine, "https://test.url/"))
-# print(get_token_from_db(engine, "https://test.url1/"))
-# print_table(engine)
