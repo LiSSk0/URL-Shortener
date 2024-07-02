@@ -6,11 +6,7 @@ import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 from datetime import date, timedelta
-import sys
 
-from credentials_funcs import get_credentials, check_credentials
-
-POSTGRE_USERNAME, POSTGRE_PASS = get_credentials("credentials.txt")
 EXPIRATION_TIME = 30  # url retention time (days), after which it will be deleted
 
 SqlAlchemyBase = sqlalchemy.orm.declarative_base()  # ??
@@ -28,9 +24,9 @@ class Url(SqlAlchemyBase):
     expiration_date = Column(Date)
 
 
-def create_db(db_name):
+def create_db(db_name, data):
     # creating connection to postgres
-    connection = psycopg2.connect(user=POSTGRE_USERNAME, password=POSTGRE_PASS)
+    connection = psycopg2.connect(user=data[0], password=data[1])
     # except (psycopg2.OperationalError, sqlalchemy.exc.OperationalError):
     #    print("!ERROR bad credentials: db/orm_funcs.py - create_db.")
     #    return False
@@ -51,10 +47,10 @@ def create_db(db_name):
     connection.close()
 
 
-def connect_to_db(db_name):
+def connect_to_db(db_name, data):
     # dialect+driver://username:password@host:port/db_name
     # default parameters: echo=False, pool_size=5, max_overflow=10, encoding='UTF-8'
-    connection_link = "postgresql+psycopg2://" + POSTGRE_USERNAME + ":" + POSTGRE_PASS + "@localhost/" + db_name
+    connection_link = "postgresql+psycopg2://" + data[0] + ":" + data[1] + "@localhost/" + db_name
 
     # engine creating and connecting
     engine = create_engine(connection_link)
@@ -134,19 +130,3 @@ def deleting_expired_urls(engine):
             session.delete(url_obj)
             print(url_obj.long_url, "has been deleted. Expiration date was", url_obj.expiration_date)
         session.commit()
-
-
-if not check_credentials(POSTGRE_USERNAME, POSTGRE_PASS):
-    print("!ERROR bad credentials")
-    # sys.exit()
-
-DB_NAME = "db_url"
-create_db(DB_NAME)  # creating db if not
-engine = connect_to_db(DB_NAME)  # creating engine to manage db
-
-insert_to_db(engine, "https://test.ru/1/", "TEST1")
-insert_to_db(engine, "https://test.ru/2/", "TEST2")
-print("-----Current table:-----")
-print_table(engine)
-print("------------------------")
-deleting_expired_urls(engine)
