@@ -117,7 +117,7 @@ def get_token_from_db(engine, long_url):
     if not is_in_db(engine, long_url):
         return None
     with Session(engine) as session:
-        return session.query(Url.token).filter(Url.long_url == long_url).first()[0]
+        return session.query(Url.token).filter(Url.long_url == long_url).first()
 
 
 def get_tokens(engine):
@@ -125,6 +125,28 @@ def get_tokens(engine):
         return session.query(Url.token).all()
 
 
+def deleting_expired_urls(engine):
+    current_date = date.today()
+    # current_date = date(2024, 10, 28)
+    with Session(engine) as session:
+        expired_urls = session.query(Url).filter(Url.expiration_date <= current_date)
+        for url_obj in expired_urls:
+            session.delete(url_obj)
+            print(url_obj.long_url, "has been deleted. Expiration date was", url_obj.expiration_date)
+        session.commit()
+
+
 if not check_credentials(POSTGRE_USERNAME, POSTGRE_PASS):
     print("!ERROR bad credentials")
     # sys.exit()
+
+DB_NAME = "db_url"
+create_db(DB_NAME)  # creating db if not
+engine = connect_to_db(DB_NAME)  # creating engine to manage db
+
+insert_to_db(engine, "https://test.ru/1/", "TEST1")
+insert_to_db(engine, "https://test.ru/2/", "TEST2")
+print("-----Current table:-----")
+print_table(engine)
+print("------------------------")
+deleting_expired_urls(engine)
