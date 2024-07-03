@@ -1,13 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-            <form method="post" action="/get_url">
-              <div class="mb-3">
-                <label for="longurl" class="form-label">Введите ссылку, которую хотите сократить</label>
-                <input type="text" class="form-control" id="longurl" name="longurl" required>
-              </div>
-              <div class="text-center">
-                <button type="submit" class="btn btn-primary">Сократить</button>
-              </div>
-            </form>
+    <form action="/" method="post">
+      <label for="longurl">Введите ссылку, которую хотите сократить: </label>
+      <input type="text" id="longurl" name="longurl">
+      <input type="submit" value="сократить">
+    </form>
 {% endblock %}
