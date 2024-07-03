@@ -9,9 +9,12 @@ def input_long_url():
         return render_template("input_long_url.html")
     else:
         long_url = request.form.get('longurl')
-        print(long_url)
-        token = int(long_url)+5
-        return redirect(url_for('output_short_url', token=token))
+        if long_url != '':
+            print(long_url)
+            token = int(long_url)+5
+            return redirect(url_for('output_short_url', token=token))
+        else:
+            return render_template("error_long_url_is_None.html")
 
 
 @app.route('/short_url', methods=['GET', 'POST'])
