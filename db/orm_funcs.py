@@ -70,9 +70,16 @@ def connect_to_db(db_name, data):
     return engine
 
 
-def is_in_db(engine, long_url):
+def is_long_url_in_db(engine, long_url):
     with Session(engine) as session:
         if session.query(Url).filter(Url.long_url == long_url).first():
+            return True
+        return False
+
+
+def is_token_in_db(engine, token):
+    with Session(engine) as session:
+        if session.query(Url).filter(Url.token == token).first():
             return True
         return False
 
@@ -85,7 +92,7 @@ def insert_to_db(engine, long_url, token):
     # session = sessionmaker(bind=engine)
     # и потом просто юзать session = Session()
     # но мне не хочется глобальные делать
-    result = is_in_db(engine, long_url)  # объявление тут, чтобы не было двойного открытия сессии ниже
+    result = is_long_url_in_db(engine, long_url)  # объявление тут, чтобы не было двойного открытия сессии ниже
     with Session(engine) as session:
         if not result:
             session.add(Url(long_url, token, expiration_date))
@@ -109,8 +116,15 @@ def print_table(engine):
         print(*url)
 
 
+def get_long_url_from_db(engine, token):
+    if not is_token_in_db(engine, token):
+        return None
+    with Session(engine) as session:
+        return session.query(Url.token).filter(Url.token == token).first()
+
+
 def get_token_from_db(engine, long_url):
-    if not is_in_db(engine, long_url):
+    if not is_long_url_in_db(engine, long_url):
         return None
     with Session(engine) as session:
         return session.query(Url.token).filter(Url.long_url == long_url).first()
