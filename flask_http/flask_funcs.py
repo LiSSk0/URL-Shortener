@@ -43,7 +43,7 @@ def input_long_url():
 
 @app.route('/short_url', methods=['GET', 'POST'])
 def output_short_url():
-    token = request.args.get('token', None)
+    token = 'http://127.0.0.1:5000/'+request.args.get('token', None)
     return render_template("output_short_url.html", token=token)
 
 
