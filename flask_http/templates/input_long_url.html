@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form action="/" method="post">
+      <label for="longurl">Введите ссылку, которую хотите сократить: </label>
+      <input type="text" id="longurl" name="longurl">
+      <input type="submit" value="сократить">
+    </form>
+{% endblock %}
