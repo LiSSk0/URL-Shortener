@@ -1,5 +1,5 @@
 from db.orm_funcs import create_db, connect_to_db , get_token_from_db, print_table
-from flask_http.flask_funcs import get_long_url, send_long_url
+from flask_http.flask_funcs import app, process, input_long_url
 # from url_convert.url_funcs import create_token, receive_all_tokens
 import sys
 from db.credentials_funcs import get_credentials, check_credentials
@@ -8,6 +8,7 @@ DB_NAME = "db_url"
 DATA = postgre_login, postgre_pass = get_credentials(".env")
 
 if __name__ == '__main__':
+    app.run()
 
     if not check_credentials(*DATA):
         print("!ERROR bad credentials. Closing the program.")

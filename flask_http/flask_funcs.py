@@ -1,27 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, abort
-#from db.orm_funcs import get_token_from_db, is_in_db
+from db.orm_funcs import get_token_from_db, is_long_url_in_db,is_token_in_db
+from url_convert.url_funcs import create_short_url
 
 app = Flask(__name__)
-
-
-def is_token_in_db(token):
-    return True
-
-
-def get_longurl_from_db(token):
-    return "https://proglib.io/p/samouchitel-po-python-dlya-nachinayushchih-chast-23-osnovy-veb-razrabotki-na-flask-2023-06-27"
-
-
-def create_short_url(url):
-    return url + "1"
-
-
-def is_in_db(long_url):
-    return False
-
-
-def get_token_from_db(long_url):
-    return long_url + "2"
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -32,7 +13,7 @@ def input_long_url():
         long_url = request.form.get('longurl')
         if long_url != '':
             print(long_url)
-            if(is_in_db(long_url)):
+            if(is_long_url_in_db(long_url)):
                 token = 'http://127.0.0.1:5000/' + get_token_from_db(long_url)
             else:
                 token = 'http://127.0.0.1:5000/' + create_short_url(long_url)
@@ -44,11 +25,8 @@ def input_long_url():
 @app.route('/<token>', methods=['GET', 'POST'])
 def process(token):
     if is_token_in_db(token):
-        long_url = get_longurl_from_db(token)
+        long_url = "0" # get_longurl_from_db(token)
         return redirect(long_url)
     else:
         return abort(404)
 
-
-if __name__ == '__main__':
-    app.run(debug=True)
