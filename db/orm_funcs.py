@@ -115,7 +115,7 @@ class DataBase:
         with Session(self.engine) as session:
             return session.query(UrlEntity.token).all()
 
-    def deleting_expired_urls(self):
+    def delete_expired_urls(self):
         current_date = date.today()
         # current_date = date(2024, 10, 28)
         with Session(self.engine) as session:
@@ -124,8 +124,3 @@ class DataBase:
                 session.delete(url_obj)
                 print(url_obj.long_url, "has been deleted. Expiration date was", url_obj.expiration_date)
             session.commit()
-
-
-db = DataBase("db_url", ("postgres", "2409"))
-db.insert_to_db("test123", "TEST1")
-db.print_table()
