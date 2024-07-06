@@ -28,7 +28,6 @@ class DataBase:
     def __init__(self, db_name, data):
         # creating connection to postgres
         connection = psycopg2.connect(user=data[0], password=data[1])
-
         connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 
         # creating db if not
@@ -47,7 +46,7 @@ class DataBase:
 
         # engine creating and connecting
         engine = create_engine(connection_link)
-        engine.connect()  # print(engine)
+        engine.connect()
         metadata = MetaData()
 
         # creating the main table
@@ -59,7 +58,6 @@ class DataBase:
         # init the table (if it doesn't exist)
         metadata.create_all(bind=engine)
 
-        # можно обращаться к engine?
         self.engine = engine
 
     def is_long_url_in_db(self, long_url):
