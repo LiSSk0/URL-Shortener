@@ -101,7 +101,7 @@ class DataBase:
         if not self.is_token_in_db(token):
             return None
         with Session(self.engine) as session:
-            return session.query(UrlEntity.token).filter(UrlEntity.token == token).first()
+            return session.query(UrlEntity.long_url).filter(UrlEntity.token == token).first()[0]
 
     def get_token_from_db(self, long_url):
         if not self.is_long_url_in_db(long_url):

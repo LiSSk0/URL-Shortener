@@ -14,4 +14,4 @@ if __name__ == '__main__':
     db = DataBase(DB_NAME, DATA)
     send_db(db)
 
-    app.run()
+    app.run(debug=True)
