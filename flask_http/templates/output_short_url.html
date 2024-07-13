@@ -3,7 +3,7 @@
 {% block content %}
     <form action="/" method="post">
       <label for="longurl" style="font-size: 1.2em; line-height: 1.6;">Введите ссылку для сокращения: </label>
-      <input type="text" id="longurl" name="longurl" style="font-size: 1.2em; line-height: 1.6; height: 30px;">
+       <input type="text" id="longurl" name="longurl" maxlength="2100" style="font-size: 1.2em; line-height: 1.6; height: 30px;">
       <input type="submit" value="Сократить" style="font-size: 1.2em; line-height: 1.6; height: 36px;">
         <div class="mb-3" style="font-size: 1.2em; line-height: 3.0;">
                 Короткая ссылка: {{short_url}}

@@ -2,11 +2,11 @@
 
 {% block content %}
     <form action="/check" method="post">
-      <label for="shorturl" style="font-size: 1.2em; line-height: 1.6;">Введите короткую ссылку, чтобы узнать сколько раз по ней переходили: </label>
+      <label for="shorturl" style="font-size: 1.2em; line-height: 1.6;">Узнать число переходов по короткой ссылке: </label>
       <input type="text" id="shorturl" name="shorturl" style="font-size: 1.2em; line-height: 1.6; height: 30px;">
       <input type="submit" value="Узнать" style="font-size: 1.2em; line-height: 1.6; height: 36px;">
         <div class="mb-3" style="font-size: 1.2em; line-height: 3.0;">
-                Этой ссылки у нас нет
+                Данной ссылки не существует
         </div>
     </form>
     <div style="position: fixed; bottom: 20px; left: 20px;">
