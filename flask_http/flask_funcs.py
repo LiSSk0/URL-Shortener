@@ -23,6 +23,7 @@ def generate_qr_code(url):
     qr.make(fit=True)
     return qr
 
+
 @app.route('/', methods=['GET', 'POST'])
 def input_long_url():
     if request.method == 'GET':
@@ -39,9 +40,28 @@ def input_long_url():
             qr_code = generate_qr_code(short_url)
             img = qr_code.make_image(fill_color="black", back_color="white")
             img.save(f"flask_http/static/{token}.png")
-            return render_template("output_short_url.html", short_url=short_url, token=token)
+            return render_template("output_short_url.html", short_url=short_url, token=token)\
+
         else:
             return render_template("error_long_url_is_None.html")
+
+
+@app.route('/check', methods=['GET','POST'])
+def check_url():
+    if request.method == 'GET':
+        return render_template("check_url.html")
+    else:
+        surl = request.form.get('shorturl')
+        if surl != '':
+             token = surl[-6:]
+             print(token)
+             if db.is_token_in_db(token):
+                counter = 5 #функция возвращает число переходов по ссылке
+                return render_template("check_url_counter.html", counter=counter )
+             else:
+                return render_template("no_url.html")
+        else:
+            return render_template("error_short_url_is_None.html")
 
 
 @app.route('/<string:token>', methods=['GET'])
@@ -49,6 +69,9 @@ def process(token):
     if request.method == 'GET':
         if db.is_token_in_db(token):
             long_url = db.get_long_url_from_db(token)
+            #посчитать обращение к сайту
             return redirect(long_url)
         else:
             return abort(404)
+
+
