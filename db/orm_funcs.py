@@ -1,11 +1,11 @@
 import sqlalchemy
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, MetaData, Table, Column, String, Date
+from sqlalchemy import create_engine, MetaData, Table, Column, String, Date, Integer
+import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-import psycopg2
-
 from datetime import date, timedelta
+import os
 
 EXPIRATION_TIME = 30  # url retention time (days), after which it will be deleted
 
@@ -13,15 +13,17 @@ SqlAlchemyBase = sqlalchemy.orm.declarative_base()
 
 
 class UrlEntity(SqlAlchemyBase):
-    def __init__(self, long_url, token, expiration_date):
+    def __init__(self, long_url, token, expiration_date, clicks_count):
         self.token = token
         self.long_url = long_url
         self.expiration_date = expiration_date
+        self.clicks_count = clicks_count
 
     __tablename__ = 'urls'
     long_url = Column(String, primary_key=True)
     token = Column(String)
     expiration_date = Column(Date)
+    clicks_count = Column(Integer)
 
 
 class DataBase:
@@ -53,7 +55,8 @@ class DataBase:
         table = Table('urls', metadata,
                       Column('long_url', String, primary_key=True),
                       Column('token', String),
-                      Column('expiration_date', Date))
+                      Column('expiration_date', Date),
+                      Column('clicks_count', Integer))
 
         # init the table (if it doesn't exist)
         metadata.create_all(bind=engine)
@@ -79,7 +82,7 @@ class DataBase:
         result = self.is_long_url_in_db(long_url)  # объявление тут, чтобы не было двойного открытия сессии ниже
         with Session(self.engine) as session:
             if not result:
-                session.add(UrlEntity(long_url, token, expiration_date))
+                session.add(UrlEntity(long_url, token, expiration_date, 0))
                 session.commit()
             else:
                 print("!ERROR inserting: db/orm_funcs.py - insert_to_db: url '" + long_url + "' is already in db.")
@@ -89,7 +92,7 @@ class DataBase:
         with Session(self.engine) as session:
             all_urls = session.query(UrlEntity).all()
             for url in all_urls:
-                table.append((url.long_url, url.token, url.expiration_date))
+                table.append((url.long_url, url.token, url.expiration_date, url.clicks_count))
         return table
 
     def print_table(self):
@@ -120,5 +123,13 @@ class DataBase:
             expired_urls = session.query(UrlEntity).filter(UrlEntity.expiration_date <= current_date)
             for url_obj in expired_urls:
                 session.delete(url_obj)
+                os.remove(f"flask_http/static/{url_obj.token}.png")
+
                 print(url_obj.long_url, "has been deleted. Expiration date was", url_obj.expiration_date)
+            session.commit()
+
+    def increase_clicks_count(self, token):
+        with Session(self.engine) as session:
+            session.query(UrlEntity).filter(UrlEntity.token == token)\
+                .update({UrlEntity.clicks_count: UrlEntity.clicks_count + 1})
             session.commit()
