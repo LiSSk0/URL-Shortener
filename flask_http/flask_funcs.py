@@ -58,7 +58,7 @@ def check_url():
              token = shorturl[-6:]
              print(token)
              if db.is_token_in_db(token):
-                counter = 5 #функция возвращает число переходов по ссылке
+                counter = db.get_clicks_count(token)
                 return render_template("check_url_counter.html", counter=counter )
              else:
                 return render_template("no_url.html")

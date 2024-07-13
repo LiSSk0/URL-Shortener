@@ -133,3 +133,8 @@ class DataBase:
             session.query(UrlEntity).filter(UrlEntity.token == token)\
                 .update({UrlEntity.clicks_count: UrlEntity.clicks_count + 1})
             session.commit()
+
+    def get_clicks_count(self, token):
+        with Session(self.engine) as session:
+            return session.query(UrlEntity.clicks_count).filter(UrlEntity.token == token).first()[0]
+
