@@ -1,11 +1,11 @@
 import sqlalchemy
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, MetaData, Table, Column, String, Date
+import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
-import psycopg2
-
 from datetime import date, timedelta
+import os
 
 EXPIRATION_TIME = 30  # url retention time (days), after which it will be deleted
 
@@ -120,5 +120,7 @@ class DataBase:
             expired_urls = session.query(UrlEntity).filter(UrlEntity.expiration_date <= current_date)
             for url_obj in expired_urls:
                 session.delete(url_obj)
+                os.remove(f"flask_http/static/{url_obj.token}.png")
+
                 print(url_obj.long_url, "has been deleted. Expiration date was", url_obj.expiration_date)
             session.commit()
