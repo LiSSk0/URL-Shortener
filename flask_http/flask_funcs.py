@@ -4,7 +4,6 @@ from url_convert.url_funcs import create_short_url, check_long_url
 import qrcode
 
 app = Flask(__name__)
-
 db = DataBase
 
 
@@ -37,10 +36,12 @@ def input_long_url():
                     token = str(db.get_token_from_db(long_url)[0])
                 else:
                     token = str(create_short_url(db, long_url))
-                short_url = 'http://127.0.0.1:5000/'+token
+                short_url = 'http://127.0.0.1:5000/' + token
+
                 qr_code = generate_qr_code(short_url)
                 img = qr_code.make_image(fill_color="black", back_color="white")
                 img.save(f"flask_http/static/{token}.png")
+
                 return render_template("output_short_url.html", short_url=short_url, token=token)
             else:
                 return render_template("error_long_url_is_not_url.html")
@@ -48,19 +49,18 @@ def input_long_url():
             return render_template("error_long_url_is_None.html")
 
 
-@app.route('/check', methods=['GET','POST'])
+@app.route('/check', methods=['GET', 'POST'])
 def check_url():
     if request.method == 'GET':
         return render_template("check_url.html")
     else:
-        shorturl = request.form.get('shorturl')
-        if shorturl != '':
-             token = shorturl[-6:]
-             print(token)
-             if db.is_token_in_db(token):
+        short_url = request.form.get('shorturl')
+        if short_url != '':
+            token = short_url[-6:]
+            if db.is_token_in_db(token):
                 counter = db.get_clicks_count(token)
-                return render_template("check_url_counter.html", counter=counter )
-             else:
+                return render_template("check_url_counter.html", counter=counter)
+            else:
                 return render_template("no_url.html")
         else:
             return render_template("error_short_url_is_None.html")
@@ -75,5 +75,3 @@ def process(token):
             return redirect(long_url)
         else:
             return abort(404)
-
-

@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, MetaData, Table, Column, String, Date, Integer
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-
 from datetime import date, timedelta
 import os
 
@@ -137,4 +136,3 @@ class DataBase:
     def get_clicks_count(self, token):
         with Session(self.engine) as session:
             return session.query(UrlEntity.clicks_count).filter(UrlEntity.token == token).first()[0]
-

@@ -23,13 +23,13 @@ def create_short_url(db, long_url):
 
 
 # checks if the url is correct
-# checks if the url is correct
 def check_long_url(url):
     # url types: "https://test.ru/123"
     # pattern = r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$'
 
     # accepts more types of url, for example: "https://1.2.3.4:5000"
     pattern = r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$'
+
     if re.match(pattern, url):
         return True
     return False
