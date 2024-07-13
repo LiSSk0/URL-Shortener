@@ -1,5 +1,6 @@
 import random
 import string
+import re
 
 
 # generates unique token
@@ -19,3 +20,11 @@ def create_short_url(db, long_url):
     token = generate_token(db)
     db.insert_to_db(long_url, token)
     return token
+
+
+# checks if the url is correct
+def check_long_url(url):
+    pattern = r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$'
+    if re.match(pattern, url):
+        return True
+    return False
