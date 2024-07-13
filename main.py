@@ -14,4 +14,6 @@ if __name__ == '__main__':
     db = DataBase(DB_NAME, DATA)
     send_db(db)
 
+    db.delete_expired_urls()
+
     app.run(debug=True)

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form action="/" method="post">
+      <label for="longurl" style="font-size: 1.2em; line-height: 1.6;">Введите ссылку для сокращения: </label>
+      <input type="text" id="longurl" name="longurl" style="font-size: 1.2em; line-height: 1.6; height: 30px;">
+      <input type="submit" value="Сократить" style="font-size: 1.2em; line-height: 1.6; height: 36px;">
+        <div class="mb-3" style="font-size: 1.2em; line-height: 3.0;">
+                Неверный формат ссылки
+        </div>
+    </form>
+    <div style="position: fixed; bottom: 20px; left: 20px;">
+        <a href="/check">
+            <button style="font-size: 1.2em; line-height: 1.6; height: 36px;">Статистика</button>
+        </a>
+    </div>
+
+{% endblock %}
