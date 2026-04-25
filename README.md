@@ -20,6 +20,6 @@
 
 
 # Для связи:
-- VK: @lissk0 и @kurlik_da
-- Telegram: @lissk0 и @kurlik_da
-- email: lissk0@mail.ru
+- VK: @lissk0 и @kurlikda
+- Telegram: @lissk0 и @kurlikda
+- email: lissk0@mail.ru и dasha_soloveva_2005@mail.ru
